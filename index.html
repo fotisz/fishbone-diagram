@@ -2,48 +2,77 @@
   <head>
     <title>d3 Fishbone diagram</title>
     <meta charset="utf-8">
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/3.22.0/codemirror.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/3.22.0/theme/neat.css">
     <style>
-      @import url("../fishbone-diagram/style.css");
+      @import url("./style.css");
     </style>
   </head>
   <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.1/d3.min.js" charset="utf-8"></script>
-    <script src="../fishbone-diagram/d3.fishbone.js" charset="utf-8"></script>
-    <script>
-      // create the configurable selection modifier
-      var fishbone = d3.fishbone();
+    <div id="editor">
+      <a id="edit" href="#">edit</a>
       
-      // load the data
-      d3.json("/fishbone-diagram/data.json", function(data){
-        // the most reliable way to get the screen size
-        var size = (function(){
-            return {width: this.clientWidth, height: this.clientHeight};
-          }).bind(window.document.documentElement),
-        
-        svg = d3.select("body")
-          .append("svg")
-          // firefox needs a real size
-          .attr(size())
-          // set the data so the reusable chart can find it
-          .datum(data)
-          // set up the default arrowhead
-          .call(fishbone.defaultArrow)
-          // call the selection modifier
-          .call(fishbone);
-          
-        // this is the actual `force`: just start it
-        fishbone.force().start();
-        
-        // handle resizing the window
-        d3.select(window).on("resize", function(){
-          fishbone.force()
-            .size([size().width, size().height])
-            .start();
-          svg.attr(size())
-        });
-        
+      <a href="javascript:javascript: (function () { var e = document.createElement('script'); if (window.location.protocol === 'https:') { e.setAttribute('src', 'https://raw.github.com/NYTimes/svg-crowbar/gh-pages/svg-crowbar.js'); } else { e.setAttribute('src', 'http://nytimes.github.com/svg-crowbar/svg-crowbar.js'); } e.setAttribute('class', 'svg-crowbar'); document.body.appendChild(e); })();">save</a>
+      <div id="code">
+        <textarea>- Quality
+ - Machine
+ - Material
+ - Milieu
+ - Manpower</textarea>
+      </div>
+    </div>
+    <div id="fishbone"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.1/d3.min.js" charset="utf-8"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.22.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.22.0/addon/edit/continuelist.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.22.0/mode/xml/xml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/3.22.0/mode/markdown/markdown.js"></script>
+    
+    <script src="./d3.fishbone.js" charset="utf-8"></script>
+    <script src="./fishlist.js" charset="utf-8"></script>
+    <script>
+      var editing = 1; 
+      var size = (function(){
+          return {width: this.clientWidth, height: this.clientHeight};
+        }).bind(window.document.documentElement);
+    
+      var fishlist = d3.fishlist()
+        .editor(CodeMirror.fromTextArea(d3.select("#code textarea").node(), {
+          mode: "markdown",
+          lineNumbers: true,
+          theme: "neat",
+          extraKeys: {Enter: "newlineAndIndentContinueMarkdownList"}
+        }));
+      
+      fishlist.force().size([size().width, size().height]);
+      
+      var svg = d3.select("#fishbone")
+        .append("svg")
+        // firefox needs a real size
+        .attr(size())
+        // set up the default arrowhead
+        .call(fishlist.fishbone().defaultArrow)
+        .call(fishlist);
+      
+      d3.select("#edit").on("click", function(){
+        d3.select("#code")
+          .transition()
+          .style("height", editing ? "0" : "100%");
+        editing = !editing;
       });
       
+      // handle resizing the window
+      d3.select(window).on("resize", function(){
+        fishlist.force()
+          .size([size().width, size().height])
+          .resume();
+        svg.attr(size());
+      });
+    
     </script>
   </body>
 </html>
