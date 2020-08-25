@@ -14,7 +14,7 @@
       var fishbone = d3.fishbone();
       
       // load the data
-      d3.json("/data.json", function(data){
+      d3.json("/fishbone-diagram/data.json", function(data){
         // the most reliable way to get the screen size
         var size = (function(){
             return {width: this.clientWidth, height: this.clientHeight};
